@@ -1,14 +1,17 @@
-package routes
+package upload
+
 import (
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
+    "fmt"
+    "io"
+    "net/http"
+    "os"
+    "path/filepath"
 )
+
 func RegisterRoutes(mux *http.ServeMux) {
     mux.HandleFunc("/api/upload", uploadImageHandler)
 }
+
 func uploadImageHandler(w http.ResponseWriter, r *http.Request) {
     fmt.Println("Upload handler invoked")
     if err := r.ParseMultipartForm(10 << 20); err != nil {
@@ -46,6 +49,7 @@ func uploadImageHandler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     w.Write([]byte(`{"success": true, "message": "File uploaded successfully!"}`))
 }
+
 func ensureUploadDir() error {
     if _, err := os.Stat("upload"); os.IsNotExist(err) {
         return os.Mkdir("upload", os.ModePerm)

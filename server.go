@@ -1,15 +1,20 @@
 package main
 
 import (
+    "Server_GO/routes/pdf"   
+    "Server_GO/routes/upload" 
     "fmt"
     "net/http"
-    "Server_GO/routes" 
+
     "github.com/rs/cors"
 )
 
 func main() {
     mux := http.NewServeMux()
-    routes.RegisterRoutes(mux) 
+
+    // Register routes from different packages
+    pdf.RegisterRoutes(mux)
+    upload.RegisterRoutes(mux)
 
     handler := cors.Default().Handler(mux)
 
