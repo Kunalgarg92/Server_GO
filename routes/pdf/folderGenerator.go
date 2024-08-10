@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 
@@ -16,11 +18,11 @@ func RegisterRoutes(mux *http.ServeMux) {
 }
 
 type InspectionData struct {
-    TruckSerialNumber string `json:"Truck Serial Number"`
-    TruckModel        string `json:"Truck Model"`
-    InspectionID      int    `json:"Inspection ID"`
-    InspectorName     string `json:"Inspector Name"`
-    // Add more fields as needed
+    TruckSerialNumber string            `json:"Truck Serial Number"`
+    TruckModel        string            `json:"Truck Model"`
+    InspectionID      int               `json:"Inspection ID"`
+    InspectorName     string            `json:"Inspector Name"`
+    Images            map[string][]string `json:"Images"`
 }
 
 func GeneratePDF(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +56,7 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
 
         pdf.SetFont("Times", "", 12)
         pdf.SetTextColor(0, 0, 0)
-        pdf.SetFillColor(240, 240, 240) 
+        pdf.SetFillColor(240, 240, 240)
 
         for i := 0; i < val.NumField(); i++ {
             fieldName := typ.Field(i).Tag.Get("json")
@@ -69,7 +71,34 @@ func GeneratePDF(w http.ResponseWriter, r *http.Request) {
         pdf.Cell(0, 10, "Images:")
         pdf.Ln(12)
         pdf.SetFont("Times", "", 12)
-        pdf.Cell(0, 10, "[Insert images here]")
+        for category, images := range inspection.Images {
+            pdf.Cell(0, 10, fmt.Sprintf("%s:", category))
+            pdf.Ln(8)
+            for _, imagePath := range images {
+                absImagePath, err := filepath.Abs(imagePath)
+                if err != nil {
+                    pdf.Cell(0, 10, fmt.Sprintf("Error resolving path %s", imagePath))
+                    pdf.Ln(8)
+                    continue
+                }
+
+                fileInfo, err := os.Stat(absImagePath)
+                if os.IsNotExist(err) {
+                    pdf.Cell(0, 10, fmt.Sprintf("Image %s not found.", absImagePath))
+                    pdf.Ln(8)
+                    continue
+                }
+
+                if fileInfo.IsDir() {
+                    pdf.Cell(0, 10, fmt.Sprintf("Path %s is a directory, not a file.", absImagePath))
+                    pdf.Ln(8)
+                    continue
+                }
+
+                pdf.Image(absImagePath, 10, pdf.GetY(), 50, 0, "", "", 0, "")
+                pdf.Ln(55)
+            }
+        }
         pdf.Ln(10)
         pdf.SetDrawColor(128, 128, 128)
         pdf.Line(10, pdf.GetY(), 200, pdf.GetY())

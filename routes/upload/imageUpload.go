@@ -1,11 +1,11 @@
 package upload
 
 import (
-    "fmt"
-    "io"
-    "net/http"
-    "os"
-    "path/filepath"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func RegisterRoutes(mux *http.ServeMux) {
